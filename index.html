@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phonebook</title>
+    <script src="https://unpkg.com/vue@3.2.0/dist/vue.global.js"></script>
+    
+</head>
+<body>
+    <div id="app">
+        <h1>Phonebook</h1>
+        <form @submit.prevent="addEmployee">
+            <input v-model="newEmployee.name" placeholder="Name">
+            <input v-model="newEmployee.position" placeholder="Position">
+            <button type="submit">Add Employee</button>
+        </form>
+
+        <ul>
+            <li v-for="employee in employees" :key="employee.id">
+                {{ employee.name }} ({{ employee.position }})
+                <button @click="editEmployee(employee)">Edit</button>
+                <button @click="deleteEmployee(employee.id)">Delete</button>
+                <ul>
+                    <li v-for="phone in employee.phones" :key="phone.id">
+                        {{ phone.phone_number }}
+                        <button @click="editPhone(phone)">Edit</button>
+                        <button @click="deletePhone(phone.id)">Delete</button>
+                    </li>
+                </ul>
+                <form @submit.prevent="addPhone(employee.id)">
+                    <input v-model="newPhone" placeholder="Phone Number">
+                    <button type="submit">Add Phone</button>
+                </form>
+            </li>
+        </ul>
+    </div>
+    <script>
+        const { createApp } = Vue;
+        const apiUrl = 'http://localhost:8000/api';  // Базовый URL для API запросов
+        createApp({
+            data() {
+                return {
+                    employees: [],
+                    newEmployee: { name: '', position: '' },
+                    newPhone: '',
+                };
+            },
+            methods: {
+                async fetchEmployees() {
+                    const response = await fetch(`${apiUrl}/employees.php`);
+                    this.employees = await response.json();
+                    for (const employee of this.employees) {
+                        const res = await fetch(`${apiUrl}/phones.php?employee_id=${employee.id}`);
+                        employee.phones = await res.json();
+                    }
+                },
+                async addEmployee() {
+                    const response = await fetch(`${apiUrl}/employees.php`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(this.newEmployee),
+                    });
+                    const newEmp = await response.json();
+                    this.employees.push({ ...newEmp, phones: [] });
+                    this.newEmployee = { name: '', position: '' };
+                },
+                async deleteEmployee(id) {
+                    await fetch(`${apiUrl}/employees.php?id=${id}`, { method: 'DELETE' });
+                    this.employees = this.employees.filter(e => e.id !== id);
+                },
+                async addPhone(employee_id) {
+                    const response = await fetch(`${apiUrl}/phones.php`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ employee_id, phone_number: this.newPhone }),
+                    });
+                    const newPhone = await response.json();
+                    const employee = this.employees.find(e => e.id === employee_id);
+                    employee.phones.push(newPhone);
+                    this.newPhone = '';
+                },
+                async deletePhone(id) {
+                    await fetch(`${apiUrl}/phones.php?id=${id}`, { method: 'DELETE' });
+                    this.employees.forEach(emp => {
+                        emp.phones = emp.phones.filter(p => p.id !== id);
+                    });
+                },
+                editEmployee(employee) {
+                    // Реализация функции редактирования сотрудника
+                },
+                editPhone(phone) {
+                    // Реализация функции редактирования телефона
+                },
+            },
+            mounted() {
+                this.fetchEmployees();
+            },
+        }).mount('#app');
+    </script>
+</body>
+</html>
