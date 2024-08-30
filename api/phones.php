@@ -25,12 +25,16 @@ switch ($method) {
             }
             break;
     
-    case 'PUT':
-        $data = json_decode(file_get_contents('php://input'), true);
-        $stmt = $pdo->prepare("UPDATE phone_numbers SET phone_number = :phone_number WHERE id = :id");
-        $stmt->execute(['phone_number' => $data['phone_number'], 'id' => $data['id']]);
-        echo json_encode(['status' => 'success']);
-        break;
+            case 'PUT':
+                $data = json_decode(file_get_contents('php://input'), true);
+                if ($data && isset($data['id'], $data['phone_number'])) {
+                    $stmt = $pdo->prepare("UPDATE phone_numbers SET phone_number = :phone_number WHERE id = :id");
+                    $stmt->execute(['phone_number' => $data['phone_number'], 'id' => $data['id']]);
+                    echo json_encode(['id' => $data['id'], 'phone_number' => $data['phone_number']]);
+                } else {
+                    echo json_encode(['error' => 'Invalid input']);
+                }
+                break;
 
     case 'DELETE':
         $id = $_GET['id'];

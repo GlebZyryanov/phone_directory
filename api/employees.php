@@ -12,28 +12,46 @@ switch ($method) {
         echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
         break;
     
-        case 'POST':
+    case 'POST':
             $data = json_decode(file_get_contents('php://input'), true);
-            if ($data && isset($data['name'], $data['position'])) { // Проверка наличия данных
-                $stmt = $pdo->prepare("INSERT INTO employees (name, position) VALUES (:name, :position)");
-                $stmt->execute(['name' => $data['name'], 'position' => $data['position']]);
-                echo json_encode(['id' => $pdo->lastInsertId()]);
-            } else {
-                echo json_encode(['error' => 'Invalid input']);
+            try{
+                if ($data && isset($data['name'], $data['position'])) { // Проверка наличия данных
+                    $stmt = $pdo->prepare("INSERT INTO employees (name, position) VALUES (:name, :position)");
+                    $stmt->execute(['name' => $data['name'], 'position' => $data['position']]);
+                    echo json_encode(['id' => $pdo->lastInsertId()]);
+                } else {
+                    echo json_encode(['error' => 'Invalid input']);
+                }
+            }catch(PDOException $e){
+                echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
             }
             break;
     
     case 'PUT':
-        $data = json_decode(file_get_contents('php://input'), true);
-        $stmt = $pdo->prepare("UPDATE employees SET name = :name, position = :position WHERE id = :id");
-        $stmt->execute(['name' => $data['name'], 'position' => $data['position'], 'id' => $data['id']]);
-        echo json_encode(['status' => 'success']);
-        break;
+                $data = json_decode(file_get_contents('php://input'), true);
+                try{
+                    if ($data && isset($data['id'], $data['name'], $data['position'])) {
+                        $stmt = $pdo->prepare("UPDATE employees SET name = :name, position = :position WHERE id = :id");
+                        $stmt->execute(['name' => $data['name'], 'position' => $data['position'], 'id' => $data['id']]);
+                        echo json_encode(['id' => $data['id'], 'name' => $data['name'], 'position' => $data['position']]);
+                    } else {
+                        echo json_encode(['error' =>  'Invalid input']);
+                    }
+                }catch(PDOException $e){
+                    echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+                }
+                break;
 
     case 'DELETE':
-        $id = $_GET['id'];
+        //$id = $_GET['id'];
+       try{
+        $data = json_decode(file_get_contents('php://input'), true);
+        $id = $data['id'];
         $stmt = $pdo->prepare("DELETE FROM employees WHERE id = :id");
         $stmt->execute(['id' => $id]);
         echo json_encode(['status' => 'success']);
+       }catch(PDOException $e){
+        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+       }
         break;
 }
