@@ -18,7 +18,8 @@ switch ($method) {
                 if ($data && isset($data['name'], $data['position'])) { // Проверка наличия данных
                     $stmt = $pdo->prepare("INSERT INTO employees (name, position) VALUES (:name, :position)");
                     $stmt->execute(['name' => $data['name'], 'position' => $data['position']]);
-                    echo json_encode(['id' => $pdo->lastInsertId()]);
+                    $id = $pdo->lastInsertId();
+                    echo json_encode(['id'=> $id, 'name' => $data['name'], 'position' => $data['position']]);
                 } else {
                     echo json_encode(['error' => 'Invalid input']);
                 }
@@ -46,10 +47,14 @@ switch ($method) {
         //$id = $_GET['id'];
        try{
         $data = json_decode(file_get_contents('php://input'), true);
-        $id = $data['id'];
+        if($data && isset($data['id'])){
+            $id = $data['id'];
         $stmt = $pdo->prepare("DELETE FROM employees WHERE id = :id");
         $stmt->execute(['id' => $id]);
         echo json_encode(['status' => 'success']);
+        }else{
+            echo json_encode(['error' => 'Invalid input']);
+        }
        }catch(PDOException $e){
         echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
        }

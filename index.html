@@ -1,103 +1,205 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Phonebook</title>
-    <script src="https://unpkg.com/vue@3.2.0/dist/vue.global.js"></script>
-    
-</head>
-<body>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  </head>
+  <body>
     <div id="app">
-        <h1>Phonebook</h1>
-        <form @submit.prevent="addEmployee">
-            <input v-model="newEmployee.name" placeholder="Name">
-            <input v-model="newEmployee.position" placeholder="Position">
-            <button type="submit">Add Employee</button>
-        </form>
+      <h1>Phonebook</h1>
 
-        <ul>
-            <li v-for="employee in employees" :key="employee.id">
-                {{ employee.name }} ({{ employee.position }})
-                <button @click="editEmployee(employee)">Edit</button>
-                <button @click="deleteEmployee(employee.id)">Delete</button>
-                <ul>
-                    <li v-for="phone in employee.phones" :key="phone.id">
-                        {{ phone.phone_number }}
-                        <button @click="editPhone(phone)">Edit</button>
-                        <button @click="deletePhone(phone.id)">Delete</button>
-                    </li>
-                </ul>
-                <form @submit.prevent="addPhone(employee.id)">
-                    <input v-model="newPhone" placeholder="Phone Number">
-                    <button type="submit">Add Phone</button>
-                </form>
+      <!-- Форма добавления нового сотрудника -->
+      <form @submit.prevent="addEmployee">
+        <input v-model="newEmployee.name" placeholder="Name" />
+        <input v-model="newEmployee.position" placeholder="Position" />
+        <button type="submit">Add Employee</button>
+      </form>
+
+      <ul>
+        <!-- Отображение списка сотрудников -->
+        <li v-for="employee in employees" :key="employee.id">
+          {{ employee.name }} ({{ employee.position }})
+          <button @click="editEmployee(employee)">Edit</button>
+          <button @click="deleteEmployee(employee.id)">Delete</button>
+
+          <!-- Форма редактирования сотрудника -->
+          <div v-if="employeeToEdit && employeeToEdit.id === employee.id">
+            <input v-model="employeeToEdit.name" placeholder="Edit Name" />
+            <input
+              v-model="employeeToEdit.position"
+              placeholder="Edit Position"
+            />
+            <button @click="updateEmployee">Save</button>
+            <button @click="cancelEditEmployee">Cancel</button>
+          </div>
+
+          <ul>
+            <!-- Отображение списка телефонов сотрудника -->
+            <li v-for="phone in employee.phones" :key="phone.id">
+              {{ phone.phone_number }}
+              <button @click="editPhone(phone)">Edit</button>
+              <button @click="deletePhone(phone.id)">Delete</button>
+
+              <!-- Форма редактирования телефона -->
+              <div v-if="phoneToEdit && phoneToEdit.id === phone.id">
+                <input
+                  v-model="phoneToEdit.phone_number"
+                  placeholder="Edit Phone Number"
+                />
+                <button @click="updatePhone">Save</button>
+                <button @click="cancelEditPhone">Cancel</button>
+              </div>
             </li>
-        </ul>
+          </ul>
+
+          <!-- Форма добавления нового телефона -->
+          <form @submit.prevent="addPhone(employee.id)">
+            <input
+              v-model="newPhones[employee.id]"
+              placeholder="Phone Number"
+            />
+            <button type="submit">Add Phone</button>
+          </form>
+        </li>
+      </ul>
     </div>
     <script>
-        const { createApp } = Vue;
-        const apiUrl = 'http://localhost:8000/api';  // Базовый URL для API запросов
-        createApp({
-            data() {
-                return {
-                    employees: [],
-                    newEmployee: { name: '', position: '' },
-                    newPhone: '',
-                };
-            },
-            methods: {
-                async fetchEmployees() {
-                    const response = await fetch(`${apiUrl}/employees.php`);
-                    this.employees = await response.json();
-                    for (const employee of this.employees) {
-                        const res = await fetch(`${apiUrl}/phones.php?employee_id=${employee.id}`);
-                        employee.phones = await res.json();
-                    }
-                },
-                async addEmployee() {
-                    const response = await fetch(`${apiUrl}/employees.php`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(this.newEmployee),
-                    });
-                    const newEmp = await response.json();
-                    this.employees.push({ ...newEmp, phones: [] });
-                    this.newEmployee = { name: '', position: '' };
-                },
-                async deleteEmployee(id) {
-                    await fetch(`${apiUrl}/employees.php?id=${id}`, { method: 'DELETE' });
-                    this.employees = this.employees.filter(e => e.id !== id);
-                },
-                async addPhone(employee_id) {
-                    const response = await fetch(`${apiUrl}/phones.php`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ employee_id, phone_number: this.newPhone }),
-                    });
-                    const newPhone = await response.json();
-                    const employee = this.employees.find(e => e.id === employee_id);
-                    employee.phones.push(newPhone);
-                    this.newPhone = '';
-                },
-                async deletePhone(id) {
-                    await fetch(`${apiUrl}/phones.php?id=${id}`, { method: 'DELETE' });
-                    this.employees.forEach(emp => {
-                        emp.phones = emp.phones.filter(p => p.id !== id);
-                    });
-                },
-                editEmployee(employee) {
-                    // Реализация функции редактирования сотрудника
-                },
-                editPhone(phone) {
-                    // Реализация функции редактирования телефона
-                },
-            },
-            mounted() {
-                this.fetchEmployees();
-            },
-        }).mount('#app');
+      const { createApp } = Vue;
+      const apiUrl = "http://localhost:8000/api"; // Базовый URL для API запросов
+      createApp({
+        data() {
+          return {
+            employees: [],
+            newEmployee: { name: "", position: "" },
+            newPhones: {}, // Используем объект для хранения номеров по каждому сотруднику
+            employeeToEdit: null, // Для хранения информации о редактируемом сотруднике
+            phoneToEdit: null, // Для хранения информации о редактируемом телефоне
+          };
+        },
+        methods: {
+          async fetchEmployees() {
+            const response = await fetch(`${apiUrl}/employees.php`);
+            this.employees = await response.json();
+            for (const employee of this.employees) {
+              const res = await fetch(`${apiUrl}/phones.php`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ employee_id: employee.id }),
+              });
+              const phones = await res.json();
+              employee.phones = Array.isArray(phones) ? phones : []; // Гарантируем, что phones - это массив
+            }
+          },
+          async addEmployee() {
+            const response = await fetch(`${apiUrl}/employees.php`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(this.newEmployee),
+            });
+            const newEmp = await response.json();
+            newEmp.newPhone = "";
+            if (newEmp) {
+              newEmp.phones = []; // Инициализируем пустой массив телефонов
+              this.employees = [...this.employees, newEmp];
+              this.newEmployee = { name: "", position: "" };
+            } else {
+              console.error("Error adding employee:", newEmp.error);
+            }
+          },
+          async deleteEmployee(id) {
+            await fetch(`${apiUrl}/employees.php`, {
+              method: "DELETE",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ id }),
+            });
+            this.employees = this.employees.filter((e) => e.id !== id);
+          },
+          async addPhone(employee_id) {
+            const response = await fetch(`${apiUrl}/phones.php`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                employee_id,
+                phone_number: this.newPhones[employee_id],
+              }),
+            });
+            const newPhone = await response.json();
+            if (newPhone) {
+              const employee = this.employees.find((e) => e.id === employee_id);
+              if (employee) {
+                if (!Array.isArray(employee.phones)) {
+                  employee.phones = []; // Инициализируем массив, если он почему-то не является массивом
+                }
+                employee.phones.push(newPhone); // Добавляем новый номер в массив phones
+              }
+              this.newPhones[employee_id] = ""; // Очищаем поле ввода для данного сотрудника
+            }
+          },
+          async deletePhone(id) {
+            await fetch(`${apiUrl}/phones.php`, {
+              method: "DELETE",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ id }),
+            });
+            this.employees.forEach((emp) => {
+              emp.phones = emp.phones.filter((p) => p.id !== id);
+            });
+          },
+          async editEmployee(employee) {
+            this.employeeToEdit = { ...employee }; // Копируем данные, чтобы не изменять оригинал до подтверждения
+          },
+          async updateEmployee() {
+            const response = await fetch(`${apiUrl}/employees.php`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(this.employeeToEdit),
+            });
+            if (response.ok) {
+              const updatedEmployee = await response.json();
+              const index = this.employees.findIndex(
+                (emp) => emp.id === updatedEmployee.id
+              );
+              this.employees[index] = updatedEmployee;
+            }
+            this.employeeToEdit = null; // Закрываем модальное окно
+          },
+          cancelEditEmployee() {
+            this.employeeToEdit = null; // Отмена редактирования
+          },
+
+          async editPhone(phone) {
+            this.phoneToEdit = { ...phone }; // Копируем данные, чтобы не изменять оригинал до подтверждения
+          },
+          async updatePhone() {
+            const response = await fetch(`${apiUrl}/phones.php`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(this.phoneToEdit),
+            });
+            if (response.ok) {
+              const updatedPhone = await response.json();
+              this.employees.forEach((emp) => {
+                const index = emp.phones.findIndex(
+                  (p) => p.id === updatedPhone.id
+                );
+                if (index !== -1) {
+                  emp.phones[index] = updatedPhone;
+                }
+              });
+            }
+            this.phoneToEdit = null; // Закрываем модальное окно
+          },
+          cancelEditPhone() {
+            this.phoneToEdit = null; // Отмена редактирования
+          },
+        },
+        mounted() {
+          this.fetchEmployees();
+        },
+      }).mount("#app");
     </script>
-</body>
+  </body>
 </html>
