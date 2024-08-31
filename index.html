@@ -84,13 +84,17 @@
             const response = await fetch(`${apiUrl}/employees.php`);
             this.employees = await response.json();
             for (const employee of this.employees) {
-              const res = await fetch(`${apiUrl}/phones.php`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ employee_id: employee.id }),
-              });
-              const phones = await res.json();
-              employee.phones = Array.isArray(phones) ? phones : []; // Гарантируем, что phones - это массив
+                // Используем GET и передаем employee_id как параметр в строке запроса
+                const res = await fetch(`${apiUrl}/phones.php?employee_id=${employee.id}`);
+                const phones = await res.json();
+                employee.phones = Array.isArray(phones) ? phones : []; // Гарантируем, что phones - это массив
+            //   const res = await fetch(`${apiUrl}/phones.php`, {
+            //     method: "POST",
+            //     headers: { "Content-Type": "application/json" },
+            //     body: JSON.stringify({ employee_id: employee.id }),
+            //   });
+            //   const phones = await res.json();
+            //   employee.phones = Array.isArray(phones) ? phones : []; // Гарантируем, что phones - это массив
             }
           },
           async addEmployee() {

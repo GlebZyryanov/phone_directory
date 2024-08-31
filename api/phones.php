@@ -10,10 +10,12 @@ switch ($method) {
     case 'GET':
         
         try{
-            $data = json_decode(file_get_contents('php://input'), true);
+            // $data = json_decode(file_get_contents('php://input'), true);
             
             
-            $employee_id = $data['employee_id'];
+            // $employee_id = $data['employee_id'];
+            // Получаем employee_id из строки запроса
+            $employee_id = $_GET['employee_id'];
             $stmt = $pdo->prepare("SELECT * FROM phone_numbers WHERE employee_id = :employee_id");
             $stmt->execute(['employee_id' => $employee_id]);
             echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
@@ -31,7 +33,8 @@ switch ($method) {
                 
                     $stmt = $pdo->prepare("INSERT INTO phone_numbers (employee_id, phone_number) VALUES (:employee_id, :phone_number)");
                     $stmt->execute(['employee_id' => $data['employee_id'], 'phone_number' => $data['phone_number']]);
-                    echo json_encode(['id' => $pdo->lastInsertId()]);
+                    $id = $pdo->lastInsertId();
+                    echo json_encode(['id' => $id, 'employee_id' => $data['employee_id'], 'phone_number' => $data['phone_number']]);
                 
             }catch(PDOException $e){
                 echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
