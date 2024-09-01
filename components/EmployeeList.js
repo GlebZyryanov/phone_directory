@@ -18,6 +18,10 @@ const EmployeeList = {
         body: JSON.stringify(this.employeeToEdit),
       });
       if (response.ok) {
+        const index = this.employees.findIndex(emp => emp.id === this.employeeToEdit.id);
+        if(index !== -1) {
+          this.employees[index] = this.employeeToEdit;
+        }
         this.$emit("employee-updated");
         this.employeeToEdit = null;
       }

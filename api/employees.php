@@ -44,7 +44,7 @@ switch ($method) {
                 break;
 
     case 'DELETE':
-        //$id = $_GET['id'];
+        
        try{
         $data = json_decode(file_get_contents('php://input'), true);
         if($data && isset($data['id'])){

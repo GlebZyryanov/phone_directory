@@ -1,12 +1,13 @@
-      /*Основные стили для центрации и адаптивности*/
-      body {
-        font-family: Arial, sans-serif;
-        margin: 0;
-        padding: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-      }
+
+
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 
       #app {
         width: 100%;
@@ -170,4 +171,32 @@
         border: 1px solid #ddd;
       }
       
-      
+/* Адаптивные стили для экранов шириной менее 768px */
+@media (max-width: 768px) {
+    #employee-form, .employee-card {
+      max-width: 100%; /* Увеличиваем ширину элементов на мобильных устройствах */
+    }
+  
+    .phone-form {
+      flex-direction: column; /* Изменяем направление на колонку */
+      align-items: center;
+    }
+  
+    .employee-edit input {
+      width: 100%; /* Увеличиваем ширину полей ввода на мобильных устройствах */
+    }
+  }
+
+  /* Адаптивные стили для экранов шириной менее 480px */
+@media (max-width: 480px) {
+  .employee-buttons {
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  #employee-form button, .employee-card button {
+    width: 100%;
+    padding: 10px; /* Увеличиваем размер кнопок на небольших экранах */
+  }
+}

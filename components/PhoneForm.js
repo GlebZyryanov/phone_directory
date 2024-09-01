@@ -18,7 +18,12 @@ const PhoneForm = {
         body: JSON.stringify(this.phoneToEdit),
       });
       if (response.ok) {
-        this.$emit("phone-updated");
+        const index = this.employee.phones.findIndex(phone => phone.id === this.phoneToEdit.id);
+        if(index !== -1) {
+          this.employee.phones[index] = this.phoneToEdit;
+        }
+
+        this.$emit("phoneUpdated");
         this.phoneToEdit = null;
       }
     },
