@@ -12,47 +12,109 @@ const PhoneForm = {
       this.phoneToEdit = { ...phone };
     },
     async updatePhone() {
-      const response = await fetch(`${apiUrl}/phones.php`, {
+      const options = {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(this.phoneToEdit),
-      });
-      if (response.ok) {
+      };
+
+      try {
+        const response = await fetch(`${apiUrl}/phones.php`, options);
+        if (response.ok) {
+          const index = this.employee.phones.findIndex(phone => phone.id === this.phoneToEdit.id);
+          if (index !== -1) {
+            this.employee.phones[index] = this.phoneToEdit;
+          }
+          this.$emit("phoneUpdated");
+          this.phoneToEdit = null;
+        }
+      } catch (error) {
+        console.error("Network error, saving action to localStorage");
+        this.$root.saveOfflineAction(`${apiUrl}/phones.php`, options);
         const index = this.employee.phones.findIndex(phone => phone.id === this.phoneToEdit.id);
-        if(index !== -1) {
+        if (index !== -1) {
           this.employee.phones[index] = this.phoneToEdit;
         }
-
-        this.$emit("phoneUpdated");
         this.phoneToEdit = null;
       }
+      // const response = await fetch(`${apiUrl}/phones.php`, {
+      //   method: "PUT",
+      //   headers: { "Content-Type": "application/json" },
+      //   body: JSON.stringify(this.phoneToEdit),
+      // });
+      // if (response.ok) {
+      //   const index = this.employee.phones.findIndex(phone => phone.id === this.phoneToEdit.id);
+      //   if(index !== -1) {
+      //     this.employee.phones[index] = this.phoneToEdit;
+      //   }
+
+      //   this.$emit("phoneUpdated");
+      //   this.phoneToEdit = null;
+      // }
     },
     cancelEditPhone() {
       this.phoneToEdit = null;
     },
     async deletePhone(id) {
-      await fetch(`${apiUrl}/phones.php`, {
+      const options = {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id }),
-      });
-      const employee = this.employee;
-      employee.phones = employee.phones.filter((phone) => phone.id !== id);
-      this.$emit("phoneDeleted"); // Эмитируем событие phoneDeleted
+      };
+
+      try {
+        await fetch(`${apiUrl}/phones.php`, options);
+        this.employee.phones = this.employee.phones.filter((phone) => phone.id !== id);
+        this.$emit("phoneDeleted");
+      } catch (error) {
+        console.error("Network error, saving action to localStorage");
+        this.$root.saveOfflineAction(`${apiUrl}/phones.php`, options);
+        this.employee.phones = this.employee.phones.filter((phone) => phone.id !== id);
+        this.$emit("phoneDeleted");
+      }
+      // await fetch(`${apiUrl}/phones.php`, {
+      //   method: "DELETE",
+      //   headers: { "Content-Type": "application/json" },
+      //   body: JSON.stringify({ id }),
+      // });
+      // const employee = this.employee;
+      // employee.phones = employee.phones.filter((phone) => phone.id !== id);
+      // this.$emit("phoneDeleted"); // Эмитируем событие phoneDeleted
     },
     async addPhone() {
-      const response = await fetch(`${apiUrl}/phones.php`, {
+      const options = {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           employee_id: this.employee.id,
           phone_number: this.newPhone,
         }),
-      });
-      if (response.ok) {
-        this.$emit("phoneAdded"); // Эмитируем событие phoneAdded
+      };
+
+      try {
+        const response = await fetch(`${apiUrl}/phones.php`, options);
+        if (response.ok) {
+          this.$emit("phoneAdded");
+          this.newPhone = "";
+        }
+      } catch (error) {
+        console.error("Network error, saving action to localStorage");
+        this.$root.saveOfflineAction(`${apiUrl}/phones.php`, options);
+        this.$emit("phoneAdded");
         this.newPhone = "";
       }
+      // const response = await fetch(`${apiUrl}/phones.php`, {
+      //   method: "POST",
+      //   headers: { "Content-Type": "application/json" },
+      //   body: JSON.stringify({
+      //     employee_id: this.employee.id,
+      //     phone_number: this.newPhone,
+      //   }),
+      // });
+      // if (response.ok) {
+      //   this.$emit("phoneAdded"); // Эмитируем событие phoneAdded
+      //   this.newPhone = "";
+      // }
     },
   },
   template: `

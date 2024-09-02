@@ -12,44 +12,104 @@ const EmployeeList = {
       this.employeeToEdit = { ...employee };
     },
     async updateEmployee() {
-      const response = await fetch(`${apiUrl}/employees.php`, {
+      const options = {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(this.employeeToEdit),
-      });
-      if (response.ok) {
+      };
+      try {
+        const response = await fetch(`${apiUrl}/employees.php`, options);
+        if (response.ok) {
+          const index = this.employees.findIndex(emp => emp.id === this.employeeToEdit.id);
+          if (index !== -1) {
+            this.employees[index] = this.employeeToEdit;
+          }
+          this.$emit("employee-updated");
+          this.employeeToEdit = null;
+        }
+      } catch (error) {
+        console.error("Network error, saving action to localStorage");
+        this.$root.saveOfflineAction(`${apiUrl}/employees.php`, options);
         const index = this.employees.findIndex(emp => emp.id === this.employeeToEdit.id);
-        if(index !== -1) {
+        if (index !== -1) {
           this.employees[index] = this.employeeToEdit;
         }
         this.$emit("employee-updated");
         this.employeeToEdit = null;
       }
+
+      // const response = await fetch(`${apiUrl}/employees.php`, {
+      //   method: "PUT",
+      //   headers: { "Content-Type": "application/json" },
+      //   body: JSON.stringify(this.employeeToEdit),
+      // });
+      // if (response.ok) {
+      //   const index = this.employees.findIndex(emp => emp.id === this.employeeToEdit.id);
+      //   if(index !== -1) {
+      //     this.employees[index] = this.employeeToEdit;
+      //   }
+      //   this.$emit("employee-updated");
+      //   this.employeeToEdit = null;
+      // }
     },
     async deleteEmployee(id) {
-      await fetch(`${apiUrl}/employees.php`, {
+      const options = {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id }),
-      });
-      this.$emit("employee-deleted");
+      };
+
+      try {
+        await fetch(`${apiUrl}/employees.php`, options);
+        this.$emit("employee-deleted");
+      } catch (error) {
+        console.error("Network error, saving action to localStorage");
+        this.$root.saveOfflineAction(`${apiUrl}/employees.php`, options);
+        this.$emit("employee-deleted");
+      }
+      // await fetch(`${apiUrl}/employees.php`, {
+      //   method: "DELETE",
+      //   headers: { "Content-Type": "application/json" },
+      //   body: JSON.stringify({ id }),
+      // });
+      // this.$emit("employee-deleted");
     },
     cancelEditEmployee() {
       this.employeeToEdit = null;
     },
     async addPhone(employee_id) {
-      const response = await fetch(`${apiUrl}/phones.php`, {
+      const options = {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           employee_id,
           phone_number: this.newPhones[employee_id],
         }),
-      });
-      if (response.ok) {
+      };
+      try {
+        const response = await fetch(`${apiUrl}/phones.php`, options);
+        if (response.ok) {
+          this.$emit("phone-added");
+          this.newPhones[employee_id] = "";
+        }
+      } catch (error) {
+        console.error("Network error, saving action to localStorage");
+        this.$root.saveOfflineAction(`${apiUrl}/phones.php`, options);
         this.$emit("phone-added");
         this.newPhones[employee_id] = "";
       }
+      // const response = await fetch(`${apiUrl}/phones.php`, {
+      //   method: "POST",
+      //   headers: { "Content-Type": "application/json" },
+      //   body: JSON.stringify({
+      //     employee_id,
+      //     phone_number: this.newPhones[employee_id],
+      //   }),
+      // });
+      // if (response.ok) {
+      //   this.$emit("phone-added");
+      //   this.newPhones[employee_id] = "";
+      // }
     },
   },
   template: `

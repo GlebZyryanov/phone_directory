@@ -1,6 +1,9 @@
+
+
 const EmployeeForm = {
     data() {
       return {
+        
         newEmployee: { name: "", position: "" },
         errors: {},
       };
@@ -18,13 +21,17 @@ const EmployeeForm = {
         return Object.keys(errors).length === 0;
       },
       async addEmployee() {
+        
         if (!this.validateEmployee()) return;
-  
-        const response = await fetch(`${apiUrl}/employees.php`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(this.newEmployee),
-        });
+
+      const options = {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(this.newEmployee),
+      };
+
+      try {
+        const response = await fetch(`${apiUrl}/employees.php`, options);
         const newEmp = await response.json();
         if (newEmp) {
           this.$emit("employee-added");
@@ -32,6 +39,27 @@ const EmployeeForm = {
         } else {
           console.error("Error adding employee:", newEmp.error);
         }
+      } catch (error) {
+        console.error("Network error, saving action to localStorage");
+        this.$root.saveOfflineAction(`${apiUrl}/employees.php`, options);
+        this.$emit("employee-added");
+        this.newEmployee = { name: "", position: "" };
+      }
+        
+        // if (!this.validateEmployee()) return;
+        
+        // const response = await fetch(`${apiUrl}/employees.php`, {
+        //   method: "POST",
+        //   headers: { "Content-Type": "application/json" },
+        //   body: JSON.stringify(this.newEmployee),
+        // });
+        // const newEmp = await response.json();
+        // if (newEmp) {
+        //   this.$emit("employee-added");
+        //   this.newEmployee = { name: "", position: "" };
+        // } else {
+        //   console.error("Error adding employee:", newEmp.error);
+        // }
       },
     },
     template: `
@@ -47,5 +75,5 @@ const EmployeeForm = {
     `,
   };
   
-  Vue.createApp(EmployeeForm).mount('#employee-form');
+  // Vue.createApp(EmployeeForm).mount('#employee-form');
   
