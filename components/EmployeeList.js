@@ -37,20 +37,6 @@ const EmployeeList = {
         this.$emit("employee-updated");
         this.employeeToEdit = null;
       }
-
-      // const response = await fetch(`${apiUrl}/employees.php`, {
-      //   method: "PUT",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify(this.employeeToEdit),
-      // });
-      // if (response.ok) {
-      //   const index = this.employees.findIndex(emp => emp.id === this.employeeToEdit.id);
-      //   if(index !== -1) {
-      //     this.employees[index] = this.employeeToEdit;
-      //   }
-      //   this.$emit("employee-updated");
-      //   this.employeeToEdit = null;
-      // }
     },
     async deleteEmployee(id) {
       const options = {
@@ -67,12 +53,7 @@ const EmployeeList = {
         this.$root.saveOfflineAction(`${apiUrl}/employees.php`, options);
         this.$emit("employee-deleted");
       }
-      // await fetch(`${apiUrl}/employees.php`, {
-      //   method: "DELETE",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({ id }),
-      // });
-      // this.$emit("employee-deleted");
+
     },
     cancelEditEmployee() {
       this.employeeToEdit = null;
@@ -98,18 +79,7 @@ const EmployeeList = {
         this.$emit("phone-added");
         this.newPhones[employee_id] = "";
       }
-      // const response = await fetch(`${apiUrl}/phones.php`, {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({
-      //     employee_id,
-      //     phone_number: this.newPhones[employee_id],
-      //   }),
-      // });
-      // if (response.ok) {
-      //   this.$emit("phone-added");
-      //   this.newPhones[employee_id] = "";
-      // }
+
     },
   },
   template: `

@@ -21,45 +21,31 @@ const EmployeeForm = {
         return Object.keys(errors).length === 0;
       },
       async addEmployee() {
-        
         if (!this.validateEmployee()) return;
-
-      const options = {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(this.newEmployee),
-      };
-
-      try {
-        const response = await fetch(`${apiUrl}/employees.php`, options);
-        const newEmp = await response.json();
-        if (newEmp) {
-          this.$emit("employee-added");
-          this.newEmployee = { name: "", position: "" };
-        } else {
-          console.error("Error adding employee:", newEmp.error);
+      
+        const newEmployee = { ...this.newEmployee, id: Date.now() }; // Присваиваем временный ID
+        this.$root.addEmployeeToLocal(newEmployee);
+      
+        const options = {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newEmployee),
+        };
+      
+        try {
+          const response = await fetch(`${apiUrl}/employees.php`, options);
+          const savedEmployee = await response.json();
+          if (response.ok) {
+            // Обновляем временный ID на серверный ID
+            this.$root.updateEmployeeInLocal(savedEmployee);
+          }
+        } catch (error) {
+          console.error("Network error, saving action to localStorage");
+          this.$root.saveOfflineAction(`${apiUrl}/employees.php`, options);
         }
-      } catch (error) {
-        console.error("Network error, saving action to localStorage");
-        this.$root.saveOfflineAction(`${apiUrl}/employees.php`, options);
+        
         this.$emit("employee-added");
         this.newEmployee = { name: "", position: "" };
-      }
-        
-        // if (!this.validateEmployee()) return;
-        
-        // const response = await fetch(`${apiUrl}/employees.php`, {
-        //   method: "POST",
-        //   headers: { "Content-Type": "application/json" },
-        //   body: JSON.stringify(this.newEmployee),
-        // });
-        // const newEmp = await response.json();
-        // if (newEmp) {
-        //   this.$emit("employee-added");
-        //   this.newEmployee = { name: "", position: "" };
-        // } else {
-        //   console.error("Error adding employee:", newEmp.error);
-        // }
       },
     },
     template: `
@@ -74,6 +60,4 @@ const EmployeeForm = {
       </form>
     `,
   };
-  
-  // Vue.createApp(EmployeeForm).mount('#employee-form');
   
